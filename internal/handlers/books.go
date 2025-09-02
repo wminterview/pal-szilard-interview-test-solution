@@ -18,7 +18,19 @@ func NewBookHandler(db *gorm.DB) *BookHandler {
 
 func (h *BookHandler) GetAllBooks(c *gin.Context) {
 	var books []models.Book
-	if err := h.DB.Find(&books).Error; err != nil {
+	search := c.Query("search")
+	available := c.Query("available")
+
+	query := h.DB
+
+	if search != "" {
+		query = query.Where("title ILIKE ?", "%"+search+"%")
+	}
+	if available == "true" {
+		query = query.Where("available = ?", true)
+	}
+
+	if err := query.Find(&books).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to fetch books"})
 		return
 	}
