@@ -26,8 +26,11 @@ func (h *BookHandler) GetAllBooks(c *gin.Context) {
 	if search != "" {
 		query = query.Where("title ILIKE ?", "%"+search+"%")
 	}
-	if available == "true" {
+	switch available {
+	case "true":
 		query = query.Where("available = ?", true)
+	case "false":
+		query = query.Where("available = ?", false)
 	}
 
 	if err := query.Find(&books).Error; err != nil {
