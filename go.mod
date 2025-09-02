@@ -1,6 +1,6 @@
 module library
 
-go 1.25.0
+go 1.25
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
