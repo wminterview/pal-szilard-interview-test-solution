@@ -18,34 +18,34 @@ func NewBorrowingHandler(db *gorm.DB) *BorrowingHandler {
 }
 
 func (h *BorrowingHandler) BorrowBook(c *gin.Context) {
-	var borrowRequest models.Borrowing
-	if err := c.ShouldBindJSON(&borrowRequest); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Bad Request", Message: err.Error()})
+	var req BorrowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Bad Request", Message: err.Error()})
 		return
 	}
 
 	bookID := c.Param("id")
 	var book models.Book
 	if err := h.DB.First(&book, bookID).Error; err != nil {
-		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "Not Found", Message: "Book not found"})
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Not Found", Message: "Book not found"})
 		return
 	}
 
 	if !book.Available {
-		c.JSON(http.StatusConflict, models.ErrorResponse{Error: "Conflict", Message: "Book is not available"})
+		c.JSON(http.StatusConflict, ErrorResponse{Error: "Conflict", Message: "Book is not available"})
 		return
 	}
 
 	borrowing := models.Borrowing{
 		BookID:       book.ID,
-		BorrowerName: borrowRequest.BorrowerName,
+		BorrowerName: req.BorrowerName,
 		BorrowDate:   time.Now(),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
 	if err := h.DB.Create(&borrowing).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 	bookID := c.Param("id")
 	var borrowing models.Borrowing
 	if err := h.DB.Where("book_id = ? AND return_date IS NULL", bookID).First(&borrowing).Error; err != nil {
-		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "Not Found", Message: "Borrowing record not found"})
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Not Found", Message: "Borrowing record not found"})
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 	borrowing.UpdatedAt = time.Now()
 
 	if err := h.DB.Save(&borrowing).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 func (h *BorrowingHandler) ListActiveBorrowings(c *gin.Context) {
 	var borrowings []models.Borrowing
 	if err := h.DB.Where("return_date IS NULL").Find(&borrowings).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal Server Error", Message: err.Error()})
 		return
 	}
 

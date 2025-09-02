@@ -37,10 +37,16 @@ func (h *BookHandler) GetBookByID(c *gin.Context) {
 
 func (h *BookHandler) CreateBook(c *gin.Context) {
 	var book models.Book
-	if err := c.ShouldBindJSON(&book); err != nil {
+	var req CreateBookRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
+	book.Title = req.Title
+	book.Author = req.Author
+	book.ISBN = req.ISBN
+	book.Year = req.Year
+
 	if err := h.DB.Create(&book).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to create book"})
 		return
@@ -51,14 +57,19 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 func (h *BookHandler) UpdateBook(c *gin.Context) {
 	id := c.Param("id")
 	var book models.Book
+	var req CreateBookRequest
 	if err := h.DB.First(&book, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
 		return
 	}
-	if err := c.ShouldBindJSON(&book); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
+	book.Title = req.Title
+	book.Author = req.Author
+	book.ISBN = req.ISBN
+	book.Year = req.Year
 	h.DB.Save(&book)
 	c.JSON(http.StatusOK, book)
 }
